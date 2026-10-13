@@ -1,6 +1,6 @@
 
 "use strict";
-import { spawnQR } from "./qr";
+import { spawnQR } from "./qr.js";
 
 // ── DOM references ────────────────────────────────────────────────────────────
 const canvas  = document.getElementById("qr-canvas");
