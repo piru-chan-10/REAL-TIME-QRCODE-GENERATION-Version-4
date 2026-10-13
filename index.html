@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Time QRv4</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            background: #09090e;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        /* ── Main Two-Column Layout ── */
+        .app {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* ── Left Side: Takes all remaining screen space ── */
+        .left-panel {
+            flex: 1 1 0;
+            min-width: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 8vw;
+            background: #0d0d15;
+            border-right: 2px solid rgba(167, 139, 250, 0.2);
+            position: relative;
+        }
+
+        /* Ambient glow */
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 5%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.22) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .content-box {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 680px;
+        }
+
+        /* ── Header ── */
+        .header-eyebrow {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #a78bfa;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-size: clamp(3rem, 5.2vw, 5.2rem);
+            font-weight: 900;
+            line-height: 1.05;
+            background: linear-gradient(135deg, #c4b5fd 0%, #60a5fa 50%, #34d399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+            margin-bottom: 16px;
+        }
+
+        .header-sub {
+            font-size: 16px;
+            color: #94a3b8;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.6;
+        }
+
+        .divider {
+            margin: 36px 0;
+            height: 2px;
+            width: 100%;
+            background: linear-gradient(90deg, rgba(139, 92, 246, 0.5), rgba(59, 130, 246, 0.15), transparent);
+        }
+
+        /* ── Input Section ── */
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .input-label {
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #c4b5fd;
+            margin-bottom: 10px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .input-hint {
+            font-size: 15px;
+            color: #94a3b8;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 22px;
+            line-height: 1.5;
+        }
+
+        #qr-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(167, 139, 250, 0.4);
+            border-radius: 16px;
+            padding: 24px 26px;
+            font-size: 22px;
+            font-family: 'JetBrains Mono', monospace;
+            color: #ffffff;
+            outline: none;
+            transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+            margin-bottom: 18px;
+        }
+
+        #qr-input::placeholder {
+            color: #64748b;
+        }
+
+        #qr-input:focus {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: #a78bfa;
+            box-shadow: 0 0 0 6px rgba(139, 92, 246, 0.3);
+        }
+
+        #qr-btn {
+            width: 100%;
+            padding: 24px;
+            border-radius: 16px;
+            border: none;
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            color: #ffffff;
+            font-size: 22px;
+            font-weight: 800;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 6px 24px rgba(124, 58, 237, 0.45);
+        }
+
+        #qr-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 32px rgba(124, 58, 237, 0.65);
+        }
+
+        #qr-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ── Right Side: Canvas centered ── */
+        .right-panel {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a0a12;
+            padding: 48px;
+        }
+
+        /* QR canvas — crisp pixel rendering, no blur */
+        #qr-canvas {
+            display: block;
+            width: min(55vw, 72vh);
+            height: min(55vw, 72vh);
+            aspect-ratio: 1 / 1;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow:
+                0 0 0 6px rgba(167, 139, 250, 0.18),
+                0 20px 60px rgba(0, 0, 0, 0.7);
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            transition: box-shadow 0.3s ease;
+        }
+
+        #qr-canvas:not([data-empty]) {
+            box-shadow:
+                0 0 0 6px rgba(52, 211, 153, 0.28),
+                0 20px 60px rgba(0, 0, 0, 0.7);
+        }
+    </style>
+</head>
+<body>
+
+<div class="app">
+
+    <!-- ── LEFT PANEL ── -->
+    <aside class="left-panel">
+        <div class="content-box">
+            <header class="header">
+                <p class="header-eyebrow">prototypical implementation</p>
+                <h1>Real Time<br>QRv4</h1>
+                <p class="header-sub">// Author[piru-chan-10] &nbsp;·&nbsp; educational purposes</p>
+                <div class="divider"></div>
+            </header>
+
+            <section class="input-section">
+                <label class="input-label" for="qr-input">Input String</label>
+                <p class="input-hint">Type any string below to stream real-time matrix updates.</p>
+                <input
+                    id="qr-input"
+                    type="text"
+                    placeholder="Enter string here..."
+                    autocomplete="off"
+                    spellcheck="false"
+                />
+                <button id="qr-btn">Generate QR</button>
+            </section>
+        </div>
+    </aside>
+
+    <!-- ── RIGHT PANEL (Canvas stuck to right edge) ── -->
+    <main class="right-panel">
+        <canvas id="qr-canvas" width="2145" height="2145" aria-label="Generated QR code" data-empty></canvas>
+    </main>
+
+</div>
+
+<script type="module" src="qrScript.js"></script>
+</body>
+</html>

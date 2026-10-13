@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
+    "plotly.js-dist-min": "^4.1.2"
+  },
+  "devDependencies": {
+    "vite": "^8.3.4"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite"
+  }
+}
