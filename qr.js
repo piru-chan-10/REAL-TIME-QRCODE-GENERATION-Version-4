@@ -1,6 +1,6 @@
 
 
-import { getFinalCodeWords } from "./qrDataEncoder";
+import { getFinalCodeWords } from "./qrDataEncoder.js";
 
 // QR Version 4: 33 x 33, Error Correction Level L
 export function spawnQR(txt, size = 33) {
